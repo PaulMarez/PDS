@@ -1,0 +1,192 @@
+# ============================================================
+# Generador de todas las gráficas para el documento LaTeX
+# Ejecutar en la misma carpeta que el .tex
+# ============================================================
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def correlacion_cruzada(x, y):
+    Nx, Ny = len(x), len(y)
+    R = []
+    lags = range(-(Ny-1), Nx)
+    for k in lags:
+        suma = 0
+        for n in range(Nx):
+            if 0 <= n+k < Ny:
+                suma += x[n] * y[n+k]
+        R.append(suma)
+    return np.array(R), np.array(list(lags))
+
+# ---------- Ejercicio 1 ----------
+x = np.array([1,2,3,2,1])
+N = len(x)
+Rxx = np.zeros(2*N-1)
+lags = np.arange(-(N-1), N)
+for k in range(-(N-1), N):
+    suma = 0
+    for n in range(N):
+        if 0 <= n+k < N:
+            suma += x[n]*x[n+k]
+    Rxx[k+(N-1)] = suma
+
+plt.figure(); plt.stem(range(N), x, basefmt=" ")
+plt.title("Senal x[n]"); plt.xlabel("n"); plt.ylabel("Amplitud"); plt.grid(True)
+plt.savefig("ej1_x.png", dpi=150, bbox_inches='tight'); plt.close()
+
+plt.figure(); plt.stem(lags, Rxx, basefmt=" ")
+plt.title("Autocorrelacion Rxx[k]"); plt.xlabel("Lag k"); plt.ylabel("Rxx[k]"); plt.grid(True)
+plt.savefig("ej1_Rxx.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 2 ----------
+x = np.array([0,1,2,3,2,1,0])
+y = np.array([0,0,0,1,2,3,2,1,0])
+
+plt.figure()
+plt.stem(range(len(x)), x, linefmt='b-', markerfmt='bo', basefmt=' ', label='x[n]')
+plt.stem(range(len(y)), y, linefmt='r-', markerfmt='ro', basefmt=' ', label='y[n]')
+plt.title("Senales x[n] y y[n]"); plt.xlabel("n"); plt.ylabel("Amplitud")
+plt.legend(); plt.grid(True)
+plt.savefig("ej2_senales.png", dpi=150, bbox_inches='tight'); plt.close()
+
+Rxy, lags = correlacion_cruzada(x, y)
+plt.figure(); plt.stem(lags, Rxy, basefmt=" ")
+plt.title("Correlacion cruzada Rxy[k]"); plt.xlabel("Lag k"); plt.ylabel("Rxy[k]"); plt.grid(True)
+plt.savefig("ej2_Rxy.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 3 ----------
+x = np.array([0,0,1,-1,2,1,-1,0,0])
+p = np.array([1,-1,2,1,-1])
+Rxp, lags = correlacion_cruzada(x, p)
+plt.figure(); plt.stem(lags, Rxp, basefmt=" ")
+plt.title("Correlacion cruzada Rxp[k]"); plt.xlabel("Lag k"); plt.ylabel("Rxp[k]"); plt.grid(True)
+plt.savefig("ej3_Rxp.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 4 ----------
+fs = 100; t = np.arange(0, 2, 1/fs)
+x = np.sin(2*np.pi*5*t)
+plt.figure(); plt.plot(t, x)
+plt.title("x(t) = sin(2*pi*5t)"); plt.xlabel("Tiempo (s)"); plt.ylabel("Amplitud"); plt.grid(True)
+plt.savefig("ej4_x.png", dpi=150, bbox_inches='tight'); plt.close()
+
+N = len(x); Rxx = np.zeros(2*N-1); lags = np.arange(-(N-1), N)
+for k in range(-(N-1), N):
+    suma = 0
+    for n in range(N):
+        if 0 <= n+k < N:
+            suma += x[n]*x[n+k]
+    Rxx[k+(N-1)] = suma
+Rxx_norm = Rxx / Rxx[N-1]
+plt.figure(); plt.plot(lags, Rxx_norm)
+plt.title("Autocorrelacion de x(t)"); plt.xlabel("Lag (muestras)")
+plt.ylabel("Rxx normalizada"); plt.grid(True)
+plt.savefig("ej4_Rxx.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 5 ----------
+fs = 100; t = np.arange(0, 2, 1/fs)
+x = np.sin(2*np.pi*5*t); r1 = np.sin(2*np.pi*5*t); r2 = np.sin(2*np.pi*8*t)
+plt.figure()
+plt.plot(t, x, label='x(t)'); plt.plot(t, r1, '--', label='r1(t)')
+plt.plot(t, r2, ':', label='r2(t)')
+plt.title("Comparacion de senales"); plt.xlabel("Tiempo (s)")
+plt.ylabel("Amplitud"); plt.legend(); plt.grid(True)
+plt.savefig("ej5_senales.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 6 ----------
+fs = 100; t = np.arange(0, 2, 1/fs)
+x = 2*np.sin(2*np.pi*7*t)
+frecs = [3,5,7,9,11]; max_corrs = []
+for f in frecs:
+    r = np.sin(2*np.pi*f*t)
+    R, _ = correlacion_cruzada(x, r)
+    max_corrs.append(np.max(np.abs(R)))
+plt.figure(); plt.stem(frecs, max_corrs, basefmt=" ")
+plt.title("Magnitud de correlacion vs frecuencia")
+plt.xlabel("Frecuencia (Hz)"); plt.ylabel("Max |Correlacion|"); plt.grid(True)
+plt.savefig("ej6_corr.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 7 ----------
+fs = 100; t = np.arange(0, 2, 1/fs)
+x = 2*np.sin(2*np.pi*5*t) + 0.8*np.sin(2*np.pi*12*t)
+plt.figure(); plt.plot(t, x)
+plt.title("x(t) = 2sin(2pi*5t) + 0.8sin(2pi*12t)")
+plt.xlabel("Tiempo (s)"); plt.ylabel("Amplitud"); plt.grid(True)
+plt.savefig("ej7_x.png", dpi=150, bbox_inches='tight'); plt.close()
+
+frecs = list(range(2,21)); max_corrs = []
+for f in frecs:
+    r = np.sin(2*np.pi*f*t)
+    R, _ = correlacion_cruzada(x, r)
+    max_corrs.append(np.max(np.abs(R)))
+plt.figure(); plt.stem(frecs, max_corrs, basefmt=" ")
+plt.title("Magnitud de correlacion vs frecuencia")
+plt.xlabel("Frecuencia (Hz)"); plt.ylabel("Max |Correlacion|"); plt.grid(True)
+plt.savefig("ej7_corr.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 8 ----------
+fs = 100; t = np.arange(0, 2, 1/fs)
+x1 = np.sin(2*np.pi*8*t); x2 = np.sin(2*np.pi*8*t + np.pi/3)
+rs = np.sin(2*np.pi*8*t)
+plt.figure()
+plt.plot(t, x1, label='x1'); plt.plot(t, x2, '--', label='x2')
+plt.plot(t, rs, ':', label='rs')
+plt.title("Senales con misma frecuencia, diferente fase")
+plt.xlabel("Tiempo (s)"); plt.ylabel("Amplitud"); plt.legend(); plt.grid(True)
+plt.savefig("ej8_senales.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 9 ----------
+fs = 100; N = 200; n = np.arange(N); t = n/fs
+x_clean = np.sin(2*np.pi*6*n/fs) + 0.7*np.sin(2*np.pi*15*n/fs)
+sigmas = [0.1, 0.5, 2.0]
+
+plt.figure(); plt.plot(t, x_clean, 'k', label='Limpia')
+for sigma in sigmas:
+    np.random.seed(42); w = np.random.normal(0, sigma, N)
+    plt.plot(t, x_clean + w, alpha=0.6, label=f'sigma={sigma}')
+plt.title("Senal limpia vs ruidosa"); plt.xlabel("Tiempo (s)")
+plt.ylabel("Amplitud"); plt.legend(); plt.grid(True)
+plt.savefig("ej9_senales.png", dpi=150, bbox_inches='tight'); plt.close()
+
+frecs = list(range(1,21))
+plt.figure()
+for sigma in sigmas:
+    np.random.seed(42); w = np.random.normal(0, sigma, N)
+    x_noisy = x_clean + w
+    max_corrs = []
+    for f in frecs:
+        r = np.sin(2*np.pi*f*n/fs)
+        R, _ = correlacion_cruzada(x_noisy, r)
+        max_corrs.append(np.max(np.abs(R)))
+    plt.stem(frecs, max_corrs, basefmt=" ", label=f'sigma={sigma}')
+plt.title("Magnitud de correlacion vs frecuencia")
+plt.xlabel("Frecuencia (Hz)"); plt.ylabel("Max |Correlacion|")
+plt.legend(); plt.grid(True)
+plt.savefig("ej9_corr.png", dpi=150, bbox_inches='tight'); plt.close()
+
+# ---------- Ejercicio 10 ----------
+def detect_frequencies(x, fs, frequencies):
+    N = len(x); n = np.arange(N); medidas = []
+    for f in frequencies:
+        r_sin = np.sin(2*np.pi*f*n/fs)
+        r_cos = np.cos(2*np.pi*f*n/fs)
+        Rs, _ = correlacion_cruzada(x, r_sin)
+        Rc, _ = correlacion_cruzada(x, r_cos)
+        mag = np.sqrt(np.max(np.abs(Rs))**2 + np.max(np.abs(Rc))**2)
+        medidas.append(mag)
+    return np.array(medidas)
+
+fs = 100; t = np.arange(0, 2, 1/fs)
+x = (1.5*np.sin(2*np.pi*4*t) + 0.7*np.sin(2*np.pi*9*t + np.pi/4)
+     + 2.0*np.sin(2*np.pi*16*t - np.pi/3))
+frecs = list(range(1,21)); medidas = detect_frequencies(x, fs, frecs)
+
+plt.figure(); plt.plot(t, x)
+plt.title("Senal de prueba"); plt.xlabel("Tiempo (s)"); plt.ylabel("Amplitud"); plt.grid(True)
+plt.savefig("ej10_x.png", dpi=150, bbox_inches='tight'); plt.close()
+
+plt.figure(); plt.stem(frecs, medidas, basefmt=" ")
+plt.title("Respuesta del detector vs frecuencia")
+plt.xlabel("Frecuencia (Hz)"); plt.ylabel("Medida de presencia"); plt.grid(True)
+plt.savefig("ej10_detector.png", dpi=150, bbox_inches='tight'); plt.close()
+
+print("Todas las graficas generadas correctamente.")
